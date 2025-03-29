@@ -64,7 +64,7 @@ NmapMCP  is a robust integration of the Nmap scanning tool with the Model Contex
 
 ## Configuration
 
-To configure the Nmap MCP Server, edit the `claude_desktop_config.json` file located in the project root. This file allows you to set default scan arguments, define MCP tool behaviors, and adjust logging settings.
+To configure the Nmap MCP Server, edit the `claude_desktop_config.json` file located in the project root. This file allows you to set default scan arguments, define MCP tool behaviors, and adjust logging settings.
 
 **Example `claude_desktop_config.json`:**
 
