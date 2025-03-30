@@ -1,5 +1,5 @@
-
 # NmapMCP 
+[![smithery badge](https://smithery.ai/badge/@0xPratikPatil/nmapmcp)](https://smithery.ai/server/@0xPratikPatil/nmapmcp)
 NmapMCP  is a robust integration of the Nmap scanning tool with the Model Context Protocol (MCP), enabling seamless network scanning capabilities within MCP-compatible environments. This project allows users to perform various network scans, such as top ports scanning, DNS brute force, and more, directly through MCP interfaces.
 
 ## Features
@@ -36,6 +36,15 @@ NmapMCP  is a robust integration of the Nmap scanning tool with the Model Contex
 
 ## Installation
 
+### Installing via Smithery
+
+To install Nmap Integration for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@0xPratikPatil/nmapmcp):
+
+```bash
+npx -y @smithery/cli install @0xPratikPatil/nmapmcp --client claude
+```
+
+### Manual Installation
 1.  **Clone the Repository:**
     
     ```bash
