@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/0xpratikpatil-nmapmcp-badge.png)](https://mseep.ai/app/0xpratikpatil-nmapmcp)
+
 # NmapMCP 
 [![smithery badge](https://smithery.ai/badge/@0xPratikPatil/nmapmcp)](https://smithery.ai/server/@0xPratikPatil/nmapmcp)
 NmapMCP  is a robust integration of the Nmap scanning tool with the Model Context Protocol (MCP), enabling seamless network scanning capabilities within MCP-compatible environments. This project allows users to perform various network scans, such as top ports scanning, DNS brute force, and more, directly through MCP interfaces.
