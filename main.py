@@ -1,8 +1,49 @@
+import re
+import shlex
 import nmap3
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("Nmap MCP Server")
 nmap = nmap3.Nmap()
+
+
+def validate_target(target: str) -> str:
+    """Validate target to prevent command injection."""
+    if not target or not target.strip():
+        raise ValueError("Target cannot be empty")
+
+    # Remove dangerous characters that could enable command injection
+    dangerous_chars = [';', '|', '&', '$', '`', '(', ')', '{', '}', '<', '>', '\n', '\r']
+    for char in dangerous_chars:
+        if char in target:
+            raise ValueError(f"Target contains dangerous character: {char}")
+
+    # Basic IP/hostname validation
+    if not re.match(r'^[a-zA-Z0-9\.\-\:\/]+$', target):
+        raise ValueError("Target contains invalid characters")
+
+    return target.strip()
+
+
+def validate_args(args: str) -> str:
+    """Validate and sanitize args to prevent command injection."""
+    if not args:
+        return ""
+
+    # Parse args safely using shlex
+    try:
+        parsed = shlex.split(args)
+    except ValueError as e:
+        raise ValueError(f"Invalid args format: {e}")
+
+    # Block dangerous nmap options
+    dangerous_options = ['--script', '-oN', '-oX', '-oG', '-oA', '>', '<', '|', ';', '&']
+    for opt in parsed:
+        for dangerous in dangerous_options:
+            if dangerous in opt:
+                raise ValueError(f"Blocked dangerous option in args: {opt}")
+
+    return args.strip()
 
 
 def execute_scan(scan_function, target: str, args: str = "") -> dict:
@@ -17,6 +58,10 @@ def execute_scan(scan_function, target: str, args: str = "") -> dict:
     Returns:
         dict: The scan results.
     """
+    # Validate inputs to prevent command injection
+    target = validate_target(target)
+    args = validate_args(args)
+
     return scan_function(target, args=args)
 
 @mcp.tool()
