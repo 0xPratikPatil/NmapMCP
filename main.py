@@ -12,17 +12,17 @@ def validate_target(target: str) -> str:
     if not target or not target.strip():
         raise ValueError("Target cannot be empty")
 
-    # Remove dangerous characters that could enable command injection
+    target = target.strip()
+
     dangerous_chars = [';', '|', '&', '$', '`', '(', ')', '{', '}', '<', '>', '\n', '\r']
     for char in dangerous_chars:
         if char in target:
             raise ValueError(f"Target contains dangerous character: {char}")
 
-    # Basic IP/hostname validation
     if not re.match(r'^[a-zA-Z0-9\.\-\:\/]+$', target):
         raise ValueError("Target contains invalid characters")
 
-    return target.strip()
+    return target
 
 
 def validate_args(args: str) -> str:
