@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "timeout": { "startup": 45000, "execution": 600000 },
+    "servers": {
+      "nmapmcp": {
+        "type": "local",
+        "command": ["uv", "run", "main.py"],
+        "cwd": ".",
+        "environment": {
+          "NMAP_PATH": "/usr/bin/nmap",
+          "NMAP_ALLOW_PUBLIC": "0"
+        }
+      }
+    }
+  }
+}
