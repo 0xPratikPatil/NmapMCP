@@ -155,16 +155,29 @@ TARGET_RE = re.compile(r"^[a-zA-Z0-9.\-:/,_\[\] ]+$")
 
 
 def _is_private(host: str) -> bool:
+    parts = [p.strip() for p in host.strip().split(",")]
+    parts = [p for p in parts if p]
+    if not parts:
+        return False
+    return all(_is_private_single(p) for p in parts)
+
+
+def _is_private_single(h: str) -> bool:
     try:
-        addr = ip_address(host.strip())
-        return any(addr in net for net in _PRIVATE_NETS)
+        return any(ip_address(h) in net for net in _PRIVATE_NETS)
     except ValueError:
-        try:
-            resolved = socket.gethostbyname(host.strip())
-            addr = ip_address(resolved)
-            return any(addr in net for net in _PRIVATE_NETS)
-        except Exception:
-            return True
+        pass
+    try:
+        return any(
+            ip_network(h, strict=False).subnet_of(net) for net in _PRIVATE_NETS
+        )
+    except ValueError:
+        pass
+    try:
+        addr = ip_address(socket.gethostbyname(h))
+        return any(addr in net for net in _PRIVATE_NETS)
+    except Exception:
+        return False  # fail CLOSED: unresolvable != provably private
 
 
 def _validate_target(target: str) -> str:
@@ -204,6 +217,19 @@ def validate_flags(flags: str) -> list[str]:
         else:
             validated.append(item)
     return validated
+
+
+# NSE script selectors: names, wildcards (http-*), categories, comma lists.
+# No shell metachars, no path separators (blocks --script path traversal).
+SCRIPT_RE = re.compile(r"^[A-Za-z0-9_*,.\- ]+$")
+
+
+def _validate_scripts(scripts: str) -> str:
+    if not scripts or not SCRIPT_RE.match(scripts):
+        raise ValueError(f"Illegal NSE script selector: {scripts!r}")
+    if ".." in scripts:
+        raise ValueError(f"Illegal NSE script selector: {scripts!r}")
+    return scripts
 
 
 # ---------------------------------------------------------------------------
@@ -1214,6 +1240,10 @@ async def script_scan(target: str, scripts: str, ports: str = "", extra_flags: s
     Returns:
         JSON with script output per host/port.
     """
+    try:
+        _validate_scripts(scripts)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
     flags: list[str] = ["--script", scripts, "-T4"]
     if ports:
         flags += ["-p", ports]

@@ -6,5 +6,4 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "mcp[cli]>=1.6.0",
-    "python3-nmap>=1.9.1",
 ]

@@ -57,14 +57,17 @@ def test_is_private_false(addr):
 
 
 # ---------------------------------------------------------------------------
-# Hostname that cannot be resolved → treated as private (safe default)
+# Hostname that cannot be resolved -> treated as PUBLIC (fail closed).
+# Rationale: unresolvable now may resolve to a public IP at scan time
+# (TOCTOU); the guard must not wave it through. Changed 2026-10-11 during
+# the prod-hardening pass (was: treated as private).
 # ---------------------------------------------------------------------------
 def test_is_private_unresolvable_hostname_treated_as_private(monkeypatch):
-    """An unresolvable hostname falls back to True (safe-fail)."""
+    """An unresolvable hostname falls back to False (fail-closed)."""
     import socket
     monkeypatch.setattr(socket, "gethostbyname",
                         lambda _: (_ for _ in ()).throw(OSError("no DNS")))
-    assert main._is_private("totally-invalid-hostname.example") is True
+    assert main._is_private("totally-invalid-hostname.example") is False
 
 
 # ---------------------------------------------------------------------------
