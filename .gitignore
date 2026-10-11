@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Test / tool caches
+.pytest_cache/
+.ruff_cache/
+
+# macOS metadata
+.DS_Store
