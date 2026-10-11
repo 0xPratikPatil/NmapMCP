@@ -14,6 +14,7 @@ import asyncio
 import json
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -22,9 +23,18 @@ import main
 # ---------------------------------------------------------------------------
 # Skip the whole module if nmap is not available
 # ---------------------------------------------------------------------------
-NMAP_PATH = os.environ.get("NMAP_PATH", "C:/PROGRA~2/Nmap/nmap.exe")
+def _default_nmap() -> str:
+    env = os.environ.get("NMAP_PATH")
+    if env:
+        return env
+    if sys.platform == "win32":
+        return "C:/PROGRA~2/Nmap/nmap.exe"
+    return shutil.which("nmap") or "nmap"
 
-_nmap_available = os.path.isfile(NMAP_PATH)
+
+NMAP_PATH = _default_nmap()
+
+_nmap_available = os.path.isfile(NMAP_PATH) or shutil.which(NMAP_PATH) is not None
 
 pytestmark = pytest.mark.skipif(
     not _nmap_available,
