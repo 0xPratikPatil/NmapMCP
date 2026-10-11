@@ -21,6 +21,7 @@ import logging
 import os
 import re
 import shlex
+import shutil
 import socket
 import sys
 import tempfile
@@ -37,7 +38,16 @@ from mcp.server.fastmcp import FastMCP
 # Nmap binary path  (Windows: use 8.3 short path with forward slashes so
 # shlex.split does not strip backslashes)
 # ---------------------------------------------------------------------------
-NMAP_PATH = os.environ.get("NMAP_PATH", "C:/PROGRA~2/Nmap/nmap.exe")
+def _resolve_nmap_path() -> str:
+    env = os.environ.get("NMAP_PATH")
+    if env:
+        return env
+    if sys.platform == "win32":
+        return "C:/PROGRA~2/Nmap/nmap.exe"
+    return shutil.which("nmap") or "nmap"
+
+
+NMAP_PATH = _resolve_nmap_path()
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -1255,6 +1265,94 @@ async def network_inventory(subnet: str) -> str:
         },
         indent=2,
     )
+
+
+# ---------------------------------------------------------------------------
+# Backward-compat shims for pre-PR5 API (15 original nmap3 tools).
+# Old code was sync `def foo(target, args="") -> dict` via python3-nmap.
+# New core is async subprocess returning JSON str. These wrappers keep the
+# old names discoverable so existing MCP clients don't break. 3 names
+# (list_scan, os_detection, udp_scan) already exist above with new signatures.
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+async def scan_top_ports(target: str, args: str = "") -> str:
+    """Legacy alias: scan top ports. Prefer `top_ports_scan`."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"--top-ports 1000 -T4{extra}", label="scan_top_ports")
+
+
+@mcp.tool()
+async def dns_brute_force(target: str, args: str = "") -> str:
+    """Legacy alias: DNS brute-force. Prefer `dns_enum`."""
+    return await dns_enum(target)
+
+
+@mcp.tool()
+async def version_detection(target: str, args: str = "") -> str:
+    """Legacy alias: service/version detection. Prefer `service_scan`."""
+    return await service_scan(target)
+
+
+@mcp.tool()
+async def fin_scan(target: str, args: str = "") -> str:
+    """Legacy alias: FIN stealth scan."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-sF{extra}", label="fin_scan")
+
+
+@mcp.tool()
+async def idle_scan(target: str, args: str = "") -> str:
+    """Legacy alias: idle scan (requires zombie host in args)."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-sI{extra}", label="idle_scan")
+
+
+@mcp.tool()
+async def ping_scan(target: str, args: str = "") -> str:
+    """Legacy alias: ping/host discovery. Prefer `ping_sweep`."""
+    return await ping_sweep(target)
+
+
+@mcp.tool()
+async def syn_scan(target: str, args: str = "") -> str:
+    """Legacy alias: SYN scan. Prefer `syn_stealth_scan`."""
+    return await syn_stealth_scan(target)
+
+
+@mcp.tool()
+async def tcp_scan(target: str, args: str = "") -> str:
+    """Legacy alias: TCP connect scan."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-sT{extra}", label="tcp_scan")
+
+
+@mcp.tool()
+async def portscan_only(target: str, args: str = "") -> str:
+    """Legacy alias: ports only, skip host discovery."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-Pn{extra}", label="portscan_only")
+
+
+@mcp.tool()
+async def no_portscan(target: str, args: str = "") -> str:
+    """Legacy alias: host discovery only, no port scan."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-sn{extra}", label="no_portscan")
+
+
+@mcp.tool()
+async def arp_discovery(target: str, args: str = "") -> str:
+    """Legacy alias: ARP discovery. Prefer `arp_scan`."""
+    return await arp_scan(target)
+
+
+@mcp.tool()
+async def disable_dns_resolution(target: str, args: str = "") -> str:
+    """Legacy alias: scan with `-n` (no DNS resolution)."""
+    extra = f" {args}" if args else ""
+    return await _arun_with_flags(target, f"-n{extra}", label="disable_dns_resolution")
 
 
 # ---------------------------------------------------------------------------

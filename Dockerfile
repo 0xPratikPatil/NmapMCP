@@ -8,7 +8,8 @@ WORKDIR /app
 COPY . /app
 
 # Create uv virtual environment and install dependencies
-RUN uv venv && uv pip install -r pyproject.toml
+# nmap binary is required at runtime (new code calls it via subprocess)
+RUN apk add --no-cache nmap && uv venv && uv pip install -r pyproject.toml
 
 # Set the entrypoint command
 CMD ["uv", "run", "main.py"]
